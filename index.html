@@ -2,83 +2,230 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Quehaceres</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Focus Diario</title>
     <style>
-        :root { --primary: #6200ea; --bg: #f3f4f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        /* --- ESTILOS VISUALES --- */
+        :root {
+            --bg: #F0F2F5; --card-bg: #fff;
+            --col-hoy: #FF6B6B; --col-sem: #4ECDC4; --col-mes: #FFE66D;
+            --text: #2D3436;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; color: var(--text); }
         
-        /* Zona de escritura (Input gigante) */
-        .input-area { width: 100%; max-width: 600px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; display: flex; gap: 10px; }
-        input { flex-grow: 1; border: none; font-size: 1.2rem; outline: none; }
-        button#add { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: transform 0.1s; }
-        button#add:active { transform: scale(0.95); }
+        /* 1. INPUT SUPERIOR FIJO */
+        .header { padding: 15px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; flex-shrink: 0; }
+        .input-box { display: flex; gap: 10px; max-width: 800px; margin: 0 auto; background: #f9f9f9; padding: 5px; border-radius: 50px; border: 1px solid #ddd; }
+        input { flex: 1; border: none; background: transparent; padding: 12px 20px; font-size: 16px; outline: none; }
+        button#save { background: #2D3436; color: white; border: none; padding: 0 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button#save:active { transform: scale(0.95); }
 
-        /* Grid de tarjetas */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; width: 100%; max-width: 800px; }
+        /* 2. TABLERO KANBAN */
+        .board { flex: 1; display: flex; overflow-x: auto; padding: 15px; gap: 15px; scroll-snap-type: x mandatory; }
         
-        /* Tarjetas (Estilo Post-it moderno) */
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; border-left: 5px solid var(--primary); }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .card p { margin: 0; font-size: 1rem; color: #333; word-wrap: break-word;}
-        .loading { text-align: center; color: #888; margin-top: 20px; }
+        /* COLUMNAS */
+        .column { flex: 1; min-width: 85vw; /* En móvil ocupa casi todo */ display: flex; flex-direction: column; background: rgba(255,255,255,0.5); border-radius: 15px; padding: 10px; scroll-snap-align: center; border-top: 5px solid #ccc; }
+        
+        /* Colores de columnas */
+        #col-hoy { border-color: var(--col-hoy); }
+        #col-sem { border-color: var(--col-sem); }
+        #col-mes { border-color: var(--col-mes); }
 
+        h3 { margin: 10px 0 15px 5px; font-size: 1.1rem; opacity: 0.8; display: flex; justify-content: space-between; }
+        .badge { background: #eee; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+
+        /* 3. TARJETAS */
+        .cards-container { overflow-y: auto; flex: 1; padding-bottom: 20px; }
+        .card { 
+            background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.3s ease;
+        }
+        .card-text { font-size: 15px; line-height: 1.4; }
+        
+        /* BOTÓN DE COMPLETAR (DOPAMINA) */
+        .check-btn {
+            width: 24px; height: 24px; border: 2px solid #ddd; border-radius: 50%; 
+            margin-left: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .check-btn:hover { border-color: #4CAF50; background: #e8f5e9; }
+        
+        /* ESTADOS DE ANIMACIÓN */
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        .completed { opacity: 0; transform: scale(0.9) translateY(20px); pointer-events: none; }
+
+        /* MODO ESCRITORIO */
+        @media (min-width: 768px) {
+            .column { min-width: 250px; }
+            .board { overflow-x: hidden; justify-content: center; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="input-area">
-        <input type="text" id="nuevaTarea" placeholder="¿Qué hay que hacer hoy?" autofocus>
-        <button id="add" onclick="guardarTarea()">Guardar</button>
+    <div class="header">
+        <div class="input-box">
+            <input type="text" id="taskInput" placeholder="Ej: Pagar luz #hoy, Idea app #mes..." autocomplete="off">
+            <button id="save" onclick="addTask()">Go</button>
+        </div>
+        <div style="text-align: center; font-size: 0.75rem; color: #888; margin-top: 5px;">
+            Usa: <b>#hoy</b>, <b>#semana</b> o nada (va a #mes)
+        </div>
     </div>
 
-    <div id="muro" class="grid">
+    <div class="board">
+        <div class="column" id="col-hoy">
+            <h3>🔥 Hoy <span id="count-hoy" class="badge">0</span></h3>
+            <div class="cards-container" id="list-hoy"></div>
         </div>
-    <div id="status" class="loading">Cargando notas...</div>
+        
+        <div class="column" id="col-sem">
+            <h3>📅 Semana <span id="count-sem" class="badge">0</span></h3>
+            <div class="cards-container" id="list-sem"></div>
+        </div>
+        
+        <div class="column" id="col-mes">
+            <h3>🚀 Mes / Futuro <span id="count-mes" class="badge">0</span></h3>
+            <div class="cards-container" id="list-mes"></div>
+        </div>
+    </div>
 
     <script>
-        // PEGA AQUÍ LA URL QUE TE DIO GOOGLE APPS SCRIPT
+        // --- CONFIGURACIÓN ---
         const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec";
 
-        // Cargar tareas al abrir
+        // Estado local (Memoria RAM del navegador)
+        let tasks = [];
+
+        // AL CARGAR LA PÁGINA
         window.onload = () => {
+            // 1. Cargar caché inmediata (Velocidad ⚡)
+            const localData = localStorage.getItem('myTasks');
+            if (localData) {
+                tasks = JSON.parse(localData);
+                renderAll();
+            }
+
+            // 2. Sincronizar con la nube (Segundo plano ☁️)
             fetch(API_URL)
                 .then(res => res.json())
-                .then(data => {
-                    document.getElementById('status').style.display = 'none';
-                    data.reverse().forEach(item => crearTarjetaVisual(item.tarea));
-                });
+                .then(cloudData => {
+                    // Actualizamos con la verdad de la nube
+                    tasks = cloudData;
+                    saveLocal(); // Actualiza caché
+                    renderAll();
+                })
+                .catch(e => console.log("Offline o error sync", e));
         };
 
-        function guardarTarea() {
-            const input = document.getElementById('nuevaTarea');
-            const texto = input.value;
-            if (!texto) return;
+        // AÑADIR TAREA
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const textRaw = input.value.trim();
+            
+            if (!textRaw) return;
 
-            // 1. Feedback visual inmediato (UI Optimista)
-            crearTarjetaVisual(texto);
-            input.value = ""; // Limpiar input
-            input.focus();    // Mantener foco para escribir otra
+            // Objeto Tarea
+            const newTask = {
+                id: Date.now(), // ID temporal
+                text: textRaw
+            };
 
-            // 2. Enviar a Google Sheets en segundo plano
+            // 1. UI OPTIMISTA: Añadir a local y pintar YA
+            tasks.push(newTask);
+            saveLocal();
+            renderAll();
+            input.value = "";
+            input.focus();
+
+            // 2. Enviar a Nube
             fetch(API_URL, {
                 method: "POST",
-                body: JSON.stringify({ action: "add", tarea: texto })
-            }).catch(err => console.error("Error guardando:", err));
+                body: JSON.stringify({ action: "add", ...newTask })
+            }).catch(e => console.error("Error guardando en nube", e));
         }
 
-        function crearTarjetaVisual(texto) {
-            const muro = document.getElementById('muro');
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<p>${texto}</p>`;
-            // Insertar al principio
-            muro.insertBefore(card, muro.firstChild);
+        // COMPLETAR TAREA (DOPAMINA)
+        function completeTask(id, btnElement) {
+            // 1. Efecto visual inmediato
+            const card = btnElement.closest('.card');
+            card.classList.add('completed');
+
+            // Esperar animación para borrar lógica
+            setTimeout(() => {
+                // Borrar de memoria local
+                tasks = tasks.filter(t => t.id != id);
+                saveLocal();
+                renderAll();
+                
+                // Borrar de Nube
+                fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "complete", id: id })
+                });
+            }, 300);
         }
 
-        // Permitir guardar con Enter
-        document.getElementById("nuevaTarea").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") guardarTarea();
+        // RENDERIZADO INTELIGENTE (HASHTAGS)
+        function renderAll() {
+            // Limpiar columnas
+            document.getElementById('list-hoy').innerHTML = '';
+            document.getElementById('list-sem').innerHTML = '';
+            document.getElementById('list-mes').innerHTML = '';
+
+            let counts = { hoy: 0, sem: 0, mes: 0 };
+
+            tasks.forEach(task => {
+                const lowerText = task.text.toLowerCase();
+                let targetList = 'list-mes'; // Por defecto
+                let displayText = task.text;
+                let countKey = 'mes';
+
+                // Lógica de Hashtags
+                if (lowerText.includes('#hoy')) {
+                    targetList = 'list-hoy';
+                    displayText = task.text.replace(/#hoy/ig, '');
+                    countKey = 'hoy';
+                } else if (lowerText.includes('#semana')) {
+                    targetList = 'list-sem';
+                    displayText = task.text.replace(/#semana/ig, '');
+                    countKey = 'sem';
+                } else if (lowerText.includes('#mes')) {
+                    // Ya es default, solo limpiamos texto
+                    displayText = task.text.replace(/#mes/ig, '');
+                }
+
+                counts[countKey]++;
+                createCard(task.id, displayText, targetList);
+            });
+
+            // Actualizar contadores
+            document.getElementById('count-hoy').innerText = counts.hoy;
+            document.getElementById('count-sem').innerText = counts.sem;
+            document.getElementById('count-mes').innerText = counts.mes;
+        }
+
+        function createCard(id, text, targetId) {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <div class="card-text">${text}</div>
+                <div class="check-btn" onclick="completeTask(${id}, this)">✔</div>
+            `;
+            // Insertar al principio de la lista (LIFO)
+            const list = document.getElementById(targetId);
+            list.insertBefore(div, list.firstChild);
+        }
+
+        function saveLocal() {
+            localStorage.setItem('myTasks', JSON.stringify(tasks));
+        }
+
+        // Enter para enviar
+        document.getElementById("taskInput").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") addTask();
         });
     </script>
 </body>
