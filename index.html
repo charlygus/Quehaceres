@@ -103,7 +103,7 @@
         .card.type-mes { border-left-color: var(--accent-mes); }
 
         .card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .card-text { font-size: 1rem; line-height: 1.4; flex: 1; padding-right: 10px; }
+        .card-text { font-size: 1rem; line-height: 1.4; flex: 1; padding-right: 10px; word-break: break-word;}
 
         .check-circle {
             width: 24px; height: 24px; border: 2px solid #e0e0e0; border-radius: 50%;
@@ -122,11 +122,10 @@
         <div class="input-box">
             <input type="text" id="taskInput" placeholder="Anotar tarea..." autocomplete="off">
         </div>
-        <div class="hints">Escribe: .dia, .semana o dale a Enter</div>
+        <div class="hints">Usa: .hoy (o .dia), .semana o nada</div>
     </div>
 
     <div class="feed-container">
-        
         <div class="section-header header-hoy">
             <h2>🔥 Para Hoy</h2>
             <span id="count-hoy" class="badge badge-hoy">0</span>
@@ -144,17 +143,16 @@
             <span id="count-mes" class="badge badge-mes">0</span>
         </div>
         <div id="list-mes"></div>
-
     </div>
 
     <script>
-        // --- PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ ---
+        // --- TU URL YA ESTÁ PUESTA AQUÍ ---
         const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec"; 
 
         let tasks = [];
 
         window.onload = () => {
-            const localData = localStorage.getItem('feedTasks_v2');
+            const localData = localStorage.getItem('feedTasks_v3'); // Cambié nombre para limpiar caché vieja
             if (localData) {
                 tasks = JSON.parse(localData);
                 renderFeed();
@@ -166,29 +164,20 @@
             }).catch(e => console.log("Offline", e));
         };
 
-        // --- FUNCIÓN INTELIGENTE DE LIMPIEZA ---
+        // --- FUNCIÓN DE LIMPIEZA CORREGIDA ---
         function parseInput(text) {
-            let clean = text;
             let tag = 'mes'; 
-            
-            // Convertimos a minúsculas y quitamos espacios laterales para analizar
             const t = text.toLowerCase().trim();
+            
+            // 1. Detectar etiqueta al final
+            if (/(hoy|dia)(\)?)$/i.test(t)) tag = 'hoy';
+            else if (/(semana|sem)(\)?)$/i.test(t)) tag = 'sem';
+            else if (/(mes)(\)?)$/i.test(t)) tag = 'mes';
 
-            // Lista de disparadores (Trigger words)
-            // Añadido ".dia" y variaciones con espacios
-            const hoyTriggers = ['.hoy', '#hoy', '(hoy)', ' hoy', '.dia', '#dia', '(dia)', ' dia'];
-            const semTriggers = ['.semana', '#semana', '(semana)', ' semana', '.sem', '#sem'];
-            const mesTriggers = ['.mes', '#mes', '(mes)', ' mes'];
-
-            // Detectamos si la frase TERMINA con alguno de estos disparadores
-            if (hoyTriggers.some(w => t.endsWith(w))) tag = 'hoy';
-            else if (semTriggers.some(w => t.endsWith(w))) tag = 'sem';
-            else if (mesTriggers.some(w => t.endsWith(w))) tag = 'mes';
-
-            // --- LIMPIEZA VISUAL (REGEX MEJORADO) ---
-            // Busca al final de la frase: espacio opcional + (punto/hash/paréntesis opcional) + palabra clave + cierre opcional
-            // Y lo reemplaza por vacío.
-            clean = clean.replace(/(\s+|^)([\.#\(])?(hoy|dia|semana|sem|mes)(\))?\s*$/i, "").trim();
+            // 2. Limpiar texto (CORRECCIÓN VISUAL)
+            // Busca cualquier combinación de espacios, puntos, almohadillas o paréntesis 
+            // antes de las palabras clave y lo borra todo.
+            let clean = text.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim();
             
             return { text: clean, tag: tag };
         }
@@ -200,6 +189,7 @@
 
             const { text, tag } = parseInput(raw);
             
+            // Guardamos ID, Texto limpio visualmente y Tag interno
             const newTask = { id: Date.now(), text: text, tag: tag };
 
             tasks.push(newTask);
@@ -207,7 +197,8 @@
             renderFeed();
             input.value = "";
 
-            // Al guardar en Nube, añadimos el tag al final para backup, pero el usuario no lo ve
+            // Al enviar a Google, pegamos el tag al final por seguridad/backup
+            // (La hoja de cálculo tendrá "Comprar pan #hoy", pero la web mostrará "Comprar pan")
             fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "add", id: newTask.id, text: text + " #" + tag })
@@ -237,17 +228,15 @@
                 let currentTag = task.tag;
                 let displayText = task.text;
 
-                // Retro-compatibilidad (si viene de nube vieja)
+                // Si viene de Google Sheets (datos viejos), puede no tener 'tag' separado
                 if (!currentTag) {
-                    const low = displayText.toLowerCase();
-                    if (low.includes('#hoy') || low.includes('#dia')) { currentTag = 'hoy'; }
-                    else if (low.includes('#sem')) { currentTag = 'sem'; }
-                    else { currentTag = 'mes'; }
+                    const parsed = parseInput(displayText);
+                    currentTag = parsed.tag;
+                    displayText = parsed.text; // Usamos el texto limpio aquí también
+                } else {
+                    // Si ya tiene tag, aseguramos limpieza visual extra por si acaso
+                    displayText = displayText.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim();
                 }
-
-                // LIMPIEZA EXTRA AL RENDERIZAR
-                // Aseguramos que nunca se vea .hoy, .dia, etc en la tarjeta
-                displayText = displayText.replace(/(\s+|^)([\.#\(])?(hoy|dia|semana|sem|mes)(\))?\s*$/i, "").trim();
 
                 counts[currentTag]++;
 
@@ -267,7 +256,7 @@
             if(counts.hoy === 0) listHoy.innerHTML = '<div class="empty-msg">¡Todo limpio por hoy!</div>';
         }
 
-        function saveLocal() { localStorage.setItem('feedTasks_v2', JSON.stringify(tasks)); }
+        function saveLocal() { localStorage.setItem('feedTasks_v3', JSON.stringify(tasks)); }
 
         document.getElementById("taskInput").addEventListener("keypress", function(e) {
             if (e.key === "Enter") addTask();
