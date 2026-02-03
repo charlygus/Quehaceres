@@ -14,19 +14,24 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; color: var(--text); }
         
         /* 1. INPUT SUPERIOR FIJO */
-        .header { padding: 15px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; flex-shrink: 0; }
-        .input-box { display: flex; gap: 10px; max-width: 800px; margin: 0 auto; background: #f9f9f9; padding: 5px; border-radius: 50px; border: 1px solid #ddd; }
-        input { flex: 1; border: none; background: transparent; padding: 12px 20px; font-size: 16px; outline: none; }
-        button#save { background: #2D3436; color: white; border: none; padding: 0 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button#save:active { transform: scale(0.95); }
+        .header { padding: 15px 15px 5px 15px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; flex-shrink: 0; }
+        .input-box { display: flex; gap: 10px; max-width: 800px; margin: 0 auto; background: #f9f9f9; padding: 5px; border-radius: 15px; border: 1px solid #ddd; }
+        input { flex: 1; border: none; background: transparent; padding: 12px 15px; font-size: 16px; outline: none; }
+        
+        /* NUEVO: BOTONES DE DISPARO RÁPIDO */
+        .quick-actions { display: flex; gap: 10px; max-width: 800px; margin: 10px auto 5px auto; justify-content: space-between; }
+        .btn-tag { flex: 1; border: none; padding: 10px; border-radius: 10px; font-weight: bold; color: white; cursor: pointer; font-size: 0.9rem; transition: transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-tag:active { transform: scale(0.95); }
+        
+        .btn-hoy { background: var(--col-hoy); }
+        .btn-sem { background: var(--col-sem); }
+        .btn-mes { background: var(--col-mes); color: #444; } /* Texto oscuro para amarillo */
 
         /* 2. TABLERO KANBAN */
         .board { flex: 1; display: flex; overflow-x: auto; padding: 15px; gap: 15px; scroll-snap-type: x mandatory; }
         
         /* COLUMNAS */
-        .column { flex: 1; min-width: 85vw; /* En móvil ocupa casi todo */ display: flex; flex-direction: column; background: rgba(255,255,255,0.5); border-radius: 15px; padding: 10px; scroll-snap-align: center; border-top: 5px solid #ccc; }
-        
-        /* Colores de columnas */
+        .column { flex: 1; min-width: 85vw; display: flex; flex-direction: column; background: rgba(255,255,255,0.5); border-radius: 15px; padding: 10px; scroll-snap-align: center; border-top: 5px solid #ccc; }
         #col-hoy { border-color: var(--col-hoy); }
         #col-sem { border-color: var(--col-sem); }
         #col-mes { border-color: var(--col-mes); }
@@ -41,20 +46,18 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; justify-content: space-between; align-items: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
         }
-        .card-text { font-size: 15px; line-height: 1.4; }
+        .card-text { font-size: 15px; line-height: 1.4; word-break: break-word; }
         
-        /* BOTÓN DE COMPLETAR (DOPAMINA) */
+        /* DIBUJO DEL CHECK */
         .check-btn {
-            width: 24px; height: 24px; border: 2px solid #ddd; border-radius: 50%; 
+            min-width: 24px; height: 24px; border: 2px solid #ddd; border-radius: 50%; 
             margin-left: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .check-btn:hover { border-color: #4CAF50; background: #e8f5e9; }
         
-        /* ESTADOS DE ANIMACIÓN */
         @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-        .completed { opacity: 0; transform: scale(0.9) translateY(20px); pointer-events: none; }
+        .completed { opacity: 0; transform: scale(0.9) translateX(50px); pointer-events: none; }
 
         /* MODO ESCRITORIO */
         @media (min-width: 768px) {
@@ -67,110 +70,131 @@
 
     <div class="header">
         <div class="input-box">
-            <input type="text" id="taskInput" placeholder="Ej: Pagar luz #hoy, Idea app #mes..." autocomplete="off">
-            <button id="save" onclick="addTask()">Go</button>
+            <input type="text" id="taskInput" placeholder="Escribe aquí..." autocomplete="off">
         </div>
-        <div style="text-align: center; font-size: 0.75rem; color: #888; margin-top: 5px;">
-            Usa: <b>#hoy</b>, <b>#semana</b> o nada (va a #mes)
+        
+        <div class="quick-actions">
+            <button class="btn-tag btn-hoy" onclick="addTask('hoy')">🔥 Hoy</button>
+            <button class="btn-tag btn-sem" onclick="addTask('sem')">📅 Semana</button>
+            <button class="btn-tag btn-mes" onclick="addTask('mes')">🚀 Futuro</button>
         </div>
     </div>
 
     <div class="board">
         <div class="column" id="col-hoy">
-            <h3>🔥 Hoy <span id="count-hoy" class="badge">0</span></h3>
+            <h3>HOY <span id="count-hoy" class="badge">0</span></h3>
             <div class="cards-container" id="list-hoy"></div>
         </div>
-        
         <div class="column" id="col-sem">
-            <h3>📅 Semana <span id="count-sem" class="badge">0</span></h3>
+            <h3>SEMANA <span id="count-sem" class="badge">0</span></h3>
             <div class="cards-container" id="list-sem"></div>
         </div>
-        
         <div class="column" id="col-mes">
-            <h3>🚀 Mes / Futuro <span id="count-mes" class="badge">0</span></h3>
+            <h3>FUTURO <span id="count-mes" class="badge">0</span></h3>
             <div class="cards-container" id="list-mes"></div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN ---
+        // --- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT ---
         const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec";
 
-        // Estado local (Memoria RAM del navegador)
         let tasks = [];
 
-        // AL CARGAR LA PÁGINA
         window.onload = () => {
-            // 1. Cargar caché inmediata (Velocidad ⚡)
             const localData = localStorage.getItem('myTasks');
             if (localData) {
                 tasks = JSON.parse(localData);
                 renderAll();
             }
-
-            // 2. Sincronizar con la nube (Segundo plano ☁️)
-            fetch(API_URL)
-                .then(res => res.json())
-                .then(cloudData => {
-                    // Actualizamos con la verdad de la nube
-                    tasks = cloudData;
-                    saveLocal(); // Actualiza caché
-                    renderAll();
-                })
-                .catch(e => console.log("Offline o error sync", e));
+            fetch(API_URL).then(res => res.json()).then(cloudData => {
+                tasks = cloudData;
+                saveLocal();
+                renderAll();
+            }).catch(e => console.log("Offline", e));
         };
 
-        // AÑADIR TAREA
-        function addTask() {
+        // --- LÓGICA DE TEXTO INTELIGENTE ---
+        function parseTaskText(rawText) {
+            let cleanText = rawText;
+            let tag = 'mes'; // Por defecto
+
+            const lower = rawText.toLowerCase().trim();
+
+            // Definimos los finales de frase que activan las columnas
+            // Ejemplos detectados: "hoy", ".hoy", "(hoy)", "#hoy" al final
+            const endingsHoy = [" hoy", ".hoy", "(hoy)", "#hoy", " today"];
+            const endingsSem = [" semana", ".semana", "(semana)", "#semana", " week"];
+            const endingsMes = [" mes", ".mes", "(mes)", "#mes", " month"];
+
+            // Helper para chequear si acaba con algo de la lista
+            const endsWithAny = (txt, endings) => endings.some(end => txt.endsWith(end));
+
+            if (endsWithAny(lower, endingsHoy)) tag = 'hoy';
+            else if (endsWithAny(lower, endingsSem)) tag = 'sem';
+            else if (endsWithAny(lower, endingsMes)) tag = 'mes';
+
+            // Limpiamos el texto (quitamos el comando del final)
+            // Esto es un poco rudimentario pero rápido: borramos las últimas palabras si coinciden
+            if (tag !== 'mes' || endsWithAny(lower, endingsMes)) { 
+                // Quitamos la última palabra si era el comando
+                cleanText = cleanText.replace(/(\s+|^)(\.|#|\()?(hoy|semana|mes|today|week|month)(\))?$/i, "");
+            }
+
+            return { text: cleanText, tag: tag };
+        }
+
+        // --- AÑADIR TAREA ---
+        // buttonTag es opcional. Si viene del botón, fuerza la etiqueta.
+        function addTask(buttonTag = null) {
             const input = document.getElementById('taskInput');
-            const textRaw = input.value.trim();
+            const rawText = input.value.trim();
             
-            if (!textRaw) return;
+            if (!rawText) return;
 
-            // Objeto Tarea
-            const newTask = {
-                id: Date.now(), // ID temporal
-                text: textRaw
-            };
+            // 1. Analizar texto
+            let { text, tag } = parseTaskText(rawText);
 
-            // 1. UI OPTIMISTA: Añadir a local y pintar YA
+            // 2. Si se pulsó un botón, este MANDA sobre el texto
+            if (buttonTag) {
+                tag = buttonTag;
+                // Si pulsó botón, usamos el texto tal cual (ya limpio por parseTaskText si había algo)
+            }
+
+            // 3. Crear Tarea
+            // Guardamos el tag dentro del texto con un símbolo invisible o formato especial
+            // TRUCO: Guardamos "#hoy" al final del texto internamente para persistencia, 
+            // pero visualmente lo quitaremos.
+            const textToSave = text + " #" + tag; 
+
+            const newTask = { id: Date.now(), text: textToSave };
+
             tasks.push(newTask);
             saveLocal();
             renderAll();
+            
             input.value = "";
-            input.focus();
+            input.focus(); // Volver a poner el cursor para seguir escribiendo
 
-            // 2. Enviar a Nube
+            // Enviar a Google
             fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "add", ...newTask })
-            }).catch(e => console.error("Error guardando en nube", e));
+            }).catch(e => console.error("Error", e));
         }
 
-        // COMPLETAR TAREA (DOPAMINA)
         function completeTask(id, btnElement) {
-            // 1. Efecto visual inmediato
             const card = btnElement.closest('.card');
             card.classList.add('completed');
-
-            // Esperar animación para borrar lógica
             setTimeout(() => {
-                // Borrar de memoria local
                 tasks = tasks.filter(t => t.id != id);
                 saveLocal();
                 renderAll();
-                
-                // Borrar de Nube
-                fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "complete", id: id })
-                });
+                fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "complete", id: id }) });
             }, 300);
         }
 
-        // RENDERIZADO INTELIGENTE (HASHTAGS)
         function renderAll() {
-            // Limpiar columnas
             document.getElementById('list-hoy').innerHTML = '';
             document.getElementById('list-sem').innerHTML = '';
             document.getElementById('list-mes').innerHTML = '';
@@ -178,53 +202,46 @@
             let counts = { hoy: 0, sem: 0, mes: 0 };
 
             tasks.forEach(task => {
-                const lowerText = task.text.toLowerCase();
-                let targetList = 'list-mes'; // Por defecto
+                // Leemos el tag guardado internamente
+                let lowerText = task.text.toLowerCase();
+                let targetId = 'list-mes';
                 let displayText = task.text;
                 let countKey = 'mes';
 
-                // Lógica de Hashtags
+                // Lógica inversa: Leer del guardado para pintar
                 if (lowerText.includes('#hoy')) {
-                    targetList = 'list-hoy';
-                    displayText = task.text.replace(/#hoy/ig, '');
-                    countKey = 'hoy';
-                } else if (lowerText.includes('#semana')) {
-                    targetList = 'list-sem';
-                    displayText = task.text.replace(/#semana/ig, '');
-                    countKey = 'sem';
+                    targetId = 'list-hoy'; countKey = 'hoy';
+                    displayText = displayText.replace(/#hoy/ig, '');
+                } else if (lowerText.includes('#sem')) {
+                    targetId = 'list-sem'; countKey = 'sem';
+                    displayText = displayText.replace(/#sem/ig, '');
                 } else if (lowerText.includes('#mes')) {
-                    // Ya es default, solo limpiamos texto
-                    displayText = task.text.replace(/#mes/ig, '');
+                    targetId = 'list-mes'; countKey = 'mes';
+                    displayText = displayText.replace(/#mes/ig, '');
                 }
+                
+                // Limpieza final de posibles residuos
+                displayText = displayText.replace(/(\.|\()(hoy|semana|sem|mes)(\))?/ig, '');
 
                 counts[countKey]++;
-                createCard(task.id, displayText, targetList);
+                
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `<div class="card-text">${displayText}</div><div class="check-btn" onclick="completeTask(${task.id}, this)">✔</div>`;
+                
+                const list = document.getElementById(targetId);
+                list.insertBefore(div, list.firstChild);
             });
 
-            // Actualizar contadores
             document.getElementById('count-hoy').innerText = counts.hoy;
             document.getElementById('count-sem').innerText = counts.sem;
             document.getElementById('count-mes').innerText = counts.mes;
         }
 
-        function createCard(id, text, targetId) {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div class="card-text">${text}</div>
-                <div class="check-btn" onclick="completeTask(${id}, this)">✔</div>
-            `;
-            // Insertar al principio de la lista (LIFO)
-            const list = document.getElementById(targetId);
-            list.insertBefore(div, list.firstChild);
-        }
+        function saveLocal() { localStorage.setItem('myTasks', JSON.stringify(tasks)); }
 
-        function saveLocal() {
-            localStorage.setItem('myTasks', JSON.stringify(tasks));
-        }
-
-        // Enter para enviar
-        document.getElementById("taskInput").addEventListener("keyup", function(event) {
+        // Enter por defecto va a "Futuro" si no se detecta palabra clave
+        document.getElementById("taskInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") addTask();
         });
     </script>
