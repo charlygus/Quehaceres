@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Quehaceres</title>
+    <style>
+        :root { --primary: #6200ea; --bg: #f3f4f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Zona de escritura (Input gigante) */
+        .input-area { width: 100%; max-width: 600px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; display: flex; gap: 10px; }
+        input { flex-grow: 1; border: none; font-size: 1.2rem; outline: none; }
+        button#add { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: transform 0.1s; }
+        button#add:active { transform: scale(0.95); }
+
+        /* Grid de tarjetas */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; width: 100%; max-width: 800px; }
+        
+        /* Tarjetas (Estilo Post-it moderno) */
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; border-left: 5px solid var(--primary); }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card p { margin: 0; font-size: 1rem; color: #333; word-wrap: break-word;}
+        .loading { text-align: center; color: #888; margin-top: 20px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="input-area">
+        <input type="text" id="nuevaTarea" placeholder="¿Qué hay que hacer hoy?" autofocus>
+        <button id="add" onclick="guardarTarea()">Guardar</button>
+    </div>
+
+    <div id="muro" class="grid">
+        </div>
+    <div id="status" class="loading">Cargando notas...</div>
+
+    <script>
+        // PEGA AQUÍ LA URL QUE TE DIO GOOGLE APPS SCRIPT
+        const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec";
+
+        // Cargar tareas al abrir
+        window.onload = () => {
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('status').style.display = 'none';
+                    data.reverse().forEach(item => crearTarjetaVisual(item.tarea));
+                });
+        };
+
+        function guardarTarea() {
+            const input = document.getElementById('nuevaTarea');
+            const texto = input.value;
+            if (!texto) return;
+
+            // 1. Feedback visual inmediato (UI Optimista)
+            crearTarjetaVisual(texto);
+            input.value = ""; // Limpiar input
+            input.focus();    // Mantener foco para escribir otra
+
+            // 2. Enviar a Google Sheets en segundo plano
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "add", tarea: texto })
+            }).catch(err => console.error("Error guardando:", err));
+        }
+
+        function crearTarjetaVisual(texto) {
+            const muro = document.getElementById('muro');
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<p>${texto}</p>`;
+            // Insertar al principio
+            muro.insertBefore(card, muro.firstChild);
+        }
+
+        // Permitir guardar con Enter
+        document.getElementById("nuevaTarea").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") guardarTarea();
+        });
+    </script>
+</body>
+</html>
