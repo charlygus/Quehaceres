@@ -22,14 +22,14 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding-bottom: 50px; /* Espacio final */
+            padding-bottom: 50px;
         }
 
-        /* --- INPUT FIJO SUPERIOR (Sticky Header) --- */
+        /* --- INPUT FIJO SUPERIOR --- */
         .header-sticky {
             position: sticky;
             top: 0;
-            background: rgba(248, 249, 250, 0.95); /* Semi transparente */
+            background: rgba(248, 249, 250, 0.95);
             backdrop-filter: blur(5px);
             padding: 15px 20px;
             z-index: 100;
@@ -47,9 +47,7 @@
             transition: border 0.3s;
         }
 
-        .input-box:focus-within {
-            border-color: var(--text-muted);
-        }
+        .input-box:focus-within { border-color: var(--text-muted); }
 
         input {
             flex: 1;
@@ -68,41 +66,19 @@
             text-align: center;
         }
 
-        /* --- CONTENEDOR PRINCIPAL (Feed Vertical) --- */
-        .feed-container {
-            max-width: 600px; /* Ancho máximo para que en PC se vea bien */
-            margin: 0 auto;
-            padding: 20px;
-        }
+        /* --- FEED CONTAINER --- */
+        .feed-container { max-width: 600px; margin: 0 auto; padding: 20px; }
 
         /* --- SECCIONES --- */
         .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px;
             border-bottom: 2px solid #eee;
         }
 
-        .section-header h2 {
-            font-size: 1.2rem;
-            margin: 0;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .section-header h2 { font-size: 1.2rem; margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .badge { font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 6px; color: white; }
 
-        .badge {
-            font-size: 0.8rem;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 6px;
-            color: white;
-        }
-
-        /* Colores específicos por sección */
         .header-hoy { color: var(--accent-hoy); border-color: var(--accent-hoy); }
         .badge-hoy { background: var(--accent-hoy); }
 
@@ -110,72 +86,33 @@
         .badge-sem { background: var(--accent-sem); }
 
         .header-mes { color: var(--accent-mes); border-color: var(--accent-mes); }
-        .badge-mes { background: var(--accent-mes); color: #555; } /* Texto oscuro para amarillo */
+        .badge-mes { background: var(--accent-mes); color: #555; }
 
-
-        /* --- TARJETAS DE TAREAS --- */
+        /* --- TARJETAS --- */
         .card {
             background: var(--card-bg);
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 10px;
+            padding: 15px; margin-bottom: 12px; border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             transition: transform 0.2s, box-shadow 0.2s;
-            border-left: 4px solid transparent; /* Borde indicador */
+            border-left: 4px solid transparent;
         }
 
-        /* Indicador visual a la izquierda de cada tarjeta */
         .card.type-hoy { border-left-color: var(--accent-hoy); }
         .card.type-sem { border-left-color: var(--accent-sem); }
         .card.type-mes { border-left-color: var(--accent-mes); }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .card-text { font-size: 1rem; line-height: 1.4; flex: 1; padding-right: 10px; }
 
-        .card-text {
-            font-size: 1rem;
-            line-height: 1.4;
-            flex: 1;
-            padding-right: 10px;
-        }
-
-        /* BOTÓN DE CHECK */
         .check-circle {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #e0e0e0;
-            border-radius: 50%;
-            cursor: pointer;
-            flex-shrink: 0;
-            position: relative;
+            width: 24px; height: 24px; border: 2px solid #e0e0e0; border-radius: 50%;
+            cursor: pointer; flex-shrink: 0; position: relative;
         }
+        .check-circle:hover { border-color: #55efc4; background-color: #f0fff4; }
 
-        .check-circle:hover {
-            border-color: #55efc4;
-            background-color: #f0fff4;
-        }
-
-        /* ANIMACIONES */
-        .completed {
-            opacity: 0;
-            transform: translateX(50px);
-            transition: all 0.4s ease;
-            pointer-events: none;
-        }
-
-        /* Estado vacío */
-        .empty-msg {
-            text-align: center;
-            color: #b2bec3;
-            font-style: italic;
-            font-size: 0.9rem;
-            margin-top: 10px;
-        }
+        .completed { opacity: 0; transform: translateX(50px); transition: all 0.4s ease; pointer-events: none; }
+        .empty-msg { text-align: center; color: #b2bec3; font-style: italic; font-size: 0.9rem; margin-top: 10px; }
 
     </style>
 </head>
@@ -185,7 +122,7 @@
         <div class="input-box">
             <input type="text" id="taskInput" placeholder="Anotar tarea..." autocomplete="off">
         </div>
-        <div class="hints">Usa: .hoy .semana o nada (futuro)</div>
+        <div class="hints">Escribe: .dia, .semana o dale a Enter</div>
     </div>
 
     <div class="feed-container">
@@ -211,49 +148,51 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN ---
-        const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec"; // <--- ¡PEGA TU URL AQUÍ!
+        // --- PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec"; 
 
         let tasks = [];
 
-        // 1. CARGA INICIAL (LocalStorage + Network)
         window.onload = () => {
-            const localData = localStorage.getItem('feedTasks');
+            const localData = localStorage.getItem('feedTasks_v2');
             if (localData) {
                 tasks = JSON.parse(localData);
                 renderFeed();
             }
-            
-            // Sync silencioso
-            fetch(API_URL)
-                .then(res => res.json())
-                .then(cloudData => {
-                    tasks = cloudData;
-                    saveLocal();
-                    renderFeed();
-                })
-                .catch(e => console.log("Modo Offline (Error Sync)", e));
+            fetch(API_URL).then(res => res.json()).then(cloudData => {
+                tasks = cloudData;
+                saveLocal();
+                renderFeed();
+            }).catch(e => console.log("Offline", e));
         };
 
-        // 2. PARSEADOR INTELIGENTE
+        // --- FUNCIÓN INTELIGENTE DE LIMPIEZA ---
         function parseInput(text) {
             let clean = text;
-            let tag = 'mes'; // Por defecto va al fondo
+            let tag = 'mes'; 
+            
+            // Convertimos a minúsculas y quitamos espacios laterales para analizar
+            const t = text.toLowerCase().trim();
 
-            const t = text.toLowerCase();
+            // Lista de disparadores (Trigger words)
+            // Añadido ".dia" y variaciones con espacios
+            const hoyTriggers = ['.hoy', '#hoy', '(hoy)', ' hoy', '.dia', '#dia', '(dia)', ' dia'];
+            const semTriggers = ['.semana', '#semana', '(semana)', ' semana', '.sem', '#sem'];
+            const mesTriggers = ['.mes', '#mes', '(mes)', ' mes'];
 
-            // Detección de sufijos (.hoy, .semana, etc)
-            if (t.endsWith('.hoy') || t.endsWith(' hoy') || t.endsWith('(hoy)')) tag = 'hoy';
-            else if (t.endsWith('.semana') || t.endsWith(' semana') || t.endsWith('(semana)')) tag = 'sem';
-            else if (t.endsWith('.mes') || t.endsWith(' mes') || t.endsWith('(mes)')) tag = 'mes';
+            // Detectamos si la frase TERMINA con alguno de estos disparadores
+            if (hoyTriggers.some(w => t.endsWith(w))) tag = 'hoy';
+            else if (semTriggers.some(w => t.endsWith(w))) tag = 'sem';
+            else if (mesTriggers.some(w => t.endsWith(w))) tag = 'mes';
 
-            // Limpieza del comando en el texto visual
-            clean = clean.replace(/(\s+|^)(\.|#|\()?(hoy|semana|sem|mes)(\))?$/i, "");
+            // --- LIMPIEZA VISUAL (REGEX MEJORADO) ---
+            // Busca al final de la frase: espacio opcional + (punto/hash/paréntesis opcional) + palabra clave + cierre opcional
+            // Y lo reemplaza por vacío.
+            clean = clean.replace(/(\s+|^)([\.#\(])?(hoy|dia|semana|sem|mes)(\))?\s*$/i, "").trim();
             
             return { text: clean, tag: tag };
         }
 
-        // 3. AÑADIR TAREA
         function addTask() {
             const input = document.getElementById('taskInput');
             const raw = input.value.trim();
@@ -261,105 +200,75 @@
 
             const { text, tag } = parseInput(raw);
             
-            // Creamos objeto tarea
-            // NOTA: Para guardar en Google Sheets y mantener compatibilidad,
-            // guardamos el tag dentro de la string "text" con formato "Texto #tag"
-            const newTask = {
-                id: Date.now(),
-                text: text,
-                tag: tag // Propiedad interna para el frontend
-            };
+            const newTask = { id: Date.now(), text: text, tag: tag };
 
             tasks.push(newTask);
             saveLocal();
             renderFeed();
             input.value = "";
 
-            // Enviar a la nube
-            // Enviamos "Texto real #tag" para que si reseteas el sistema, el tag persista
+            // Al guardar en Nube, añadimos el tag al final para backup, pero el usuario no lo ve
             fetch(API_URL, {
                 method: "POST",
-                body: JSON.stringify({ 
-                    action: "add", 
-                    id: newTask.id, 
-                    text: text + " #" + tag 
-                })
+                body: JSON.stringify({ action: "add", id: newTask.id, text: text + " #" + tag })
             });
         }
 
-        // 4. COMPLETAR TAREA
         function completeTask(id, el) {
             const card = el.closest('.card');
             card.classList.add('completed');
-
             setTimeout(() => {
                 tasks = tasks.filter(t => t.id !== id);
                 saveLocal();
                 renderFeed();
-                
-                // Petición a la nube
-                fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "complete", id: id })
-                });
-            }, 400); // Tiempo que dura la animación CSS
+                fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "complete", id: id }) });
+            }, 400);
         }
 
-        // 5. RENDERIZADO (PINTAR PANTALLA)
         function renderFeed() {
             const listHoy = document.getElementById('list-hoy');
             const listSem = document.getElementById('list-sem');
             const listMes = document.getElementById('list-mes');
 
             listHoy.innerHTML = listSem.innerHTML = listMes.innerHTML = "";
-            
             let counts = { hoy: 0, sem: 0, mes: 0 };
 
             tasks.forEach(task => {
-                // Recuperar tag si viene del backend antiguo
                 let currentTag = task.tag;
                 let displayText = task.text;
 
-                // Si no tiene tag explícito (viene de la nube vieja), lo buscamos en el texto
+                // Retro-compatibilidad (si viene de nube vieja)
                 if (!currentTag) {
                     const low = displayText.toLowerCase();
-                    if (low.includes('#hoy')) { currentTag = 'hoy'; displayText = displayText.replace('#hoy',''); }
-                    else if (low.includes('#sem')) { currentTag = 'sem'; displayText = displayText.replace(/#sem(ana)?/,''); }
-                    else { currentTag = 'mes'; displayText = displayText.replace('#mes',''); }
+                    if (low.includes('#hoy') || low.includes('#dia')) { currentTag = 'hoy'; }
+                    else if (low.includes('#sem')) { currentTag = 'sem'; }
+                    else { currentTag = 'mes'; }
                 }
 
-                // Limpieza final visual
-                displayText = displayText.replace(/(\.|#|\()(hoy|sem|semana|mes)(\))?$/i, "").trim();
+                // LIMPIEZA EXTRA AL RENDERIZAR
+                // Aseguramos que nunca se vea .hoy, .dia, etc en la tarjeta
+                displayText = displayText.replace(/(\s+|^)([\.#\(])?(hoy|dia|semana|sem|mes)(\))?\s*$/i, "").trim();
 
                 counts[currentTag]++;
 
                 const card = document.createElement('div');
                 card.className = `card type-${currentTag}`;
-                card.innerHTML = `
-                    <div class="card-text">${displayText}</div>
-                    <div class="check-circle" onclick="completeTask(${task.id}, this)"></div>
-                `;
+                card.innerHTML = `<div class="card-text">${displayText}</div><div class="check-circle" onclick="completeTask(${task.id}, this)"></div>`;
 
-                // Insertar en la lista correspondiente (LIFO - Los nuevos arriba)
                 if (currentTag === 'hoy') listHoy.prepend(card);
                 else if (currentTag === 'sem') listSem.prepend(card);
                 else listMes.prepend(card);
             });
 
-            // Actualizar contadores
             document.getElementById('count-hoy').innerText = counts.hoy;
             document.getElementById('count-sem').innerText = counts.sem;
             document.getElementById('count-mes').innerText = counts.mes;
-
-            // Mensajes vacíos si no hay tareas
+            
             if(counts.hoy === 0) listHoy.innerHTML = '<div class="empty-msg">¡Todo limpio por hoy!</div>';
         }
 
-        function saveLocal() {
-            localStorage.setItem('feedTasks', JSON.stringify(tasks));
-        }
+        function saveLocal() { localStorage.setItem('feedTasks_v2', JSON.stringify(tasks)); }
 
-        // Evento Enter
         document.getElementById("taskInput").addEventListener("keypress", function(e) {
             if (e.key === "Enter") addTask();
         });
