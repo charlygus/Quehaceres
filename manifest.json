@@ -1,0 +1,15 @@
+{
+  "name": "Mis Quehaceres",
+  "short_name": "Tareas",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
