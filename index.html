@@ -9,234 +9,121 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="icon.png"> <link rel="icon" type="image/png" href="icon.png"> <title>Mis Quehaceres</title>
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+
+    <title>Mis Quehaceres</title>
     
     <style>
         /* --- ESTILOS GENERALES --- */
         :root {
-            --bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-main: #2d3436;
-            --text-muted: #636e72;
-            --accent-hoy: #ff7675; /* Rojo pastel */
-            --accent-sem: #74b9ff; /* Azul pastel */
-            --accent-mes: #fdcb6e; /* Amarillo pastel */
-            --danger: #ff4757;     /* Rojo alerta borrar */
+            --bg: #f8f9fa; --card-bg: #ffffff; --text-main: #2d3436; --text-muted: #636e72;
+            --accent-hoy: #ff7675; --accent-sem: #74b9ff; --accent-mes: #fdcb6e; 
+            --danger: #ff4757;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding-bottom: 80px; /* Espacio extra al final para scroll cómodo */
-            overscroll-behavior-y: none; /* Evita rebote elástico en iOS */
+            background: var(--bg); color: var(--text-main); margin: 0; padding-bottom: 80px;
+            overscroll-behavior-y: none;
         }
 
-        /* --- INPUT STICKY (CABECERA FIJA) --- */
+        /* --- SPLASH SCREEN (PANTALLA DE CARGA LIMPIA) --- */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease-out, visibility 0.5s;
+        }
+
+        #splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .splash-logo {
+            width: 120px; height: 120px; border-radius: 25px;
+            /* Sombra suave para que flote */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            /* ANIMACIÓN: Latido suave (Respiración) */
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        @keyframes breathe { 
+            0% { transform: scale(1); box-shadow: 0 15px 35px rgba(0,0,0,0.1); } 
+            50% { transform: scale(1.08); box-shadow: 0 20px 40px rgba(0,0,0,0.15); } 
+            100% { transform: scale(1); box-shadow: 0 15px 35px rgba(0,0,0,0.1); } 
+        }
+
+        /* Texto de estado muy sutil */
+        .status-text {
+            margin-top: 30px; color: #ccc; font-size: 0.85rem; letter-spacing: 1px;
+            font-weight: 500; text-transform: uppercase;
+            animation: fadeInOut 2s infinite;
+        }
+        
+        @keyframes fadeInOut { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+
+        /* --- UI PRINCIPAL --- */
         .header-sticky {
-            position: sticky;
-            top: 0;
-            background: rgba(248, 249, 250, 0.95);
-            backdrop-filter: blur(5px);
-            padding: 15px 20px;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            /* Respetar el "notch" del iPhone */
+            position: sticky; top: 0; background: rgba(248, 249, 250, 0.95);
+            backdrop-filter: blur(5px); padding: 15px 20px; z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); border-bottom: 1px solid rgba(0,0,0,0.05);
             padding-top: env(safe-area-inset-top, 15px);
         }
 
         .input-box {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            border: 1px solid transparent;
-            transition: border 0.3s;
+            background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; align-items: center; border: 1px solid transparent; transition: border 0.3s;
         }
+        .input-box:focus-within { border-color: var(--text-muted); }
+        input { flex: 1; border: none; padding: 14px; font-size: 16px; border-radius: 12px; outline: none; background: transparent; }
+        .hints { font-size: 0.75rem; color: #aaa; margin-top: 8px; text-align: center; }
 
-        .input-box:focus-within {
-            border-color: var(--text-muted);
-        }
+        .feed-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #eee; }
+        .section-header h2 { font-size: 1.2rem; margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .badge { font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 6px; color: white; }
+        
+        .header-hoy { color: var(--accent-hoy); border-color: var(--accent-hoy); } .badge-hoy { background: var(--accent-hoy); }
+        .header-sem { color: var(--accent-sem); border-color: var(--accent-sem); } .badge-sem { background: var(--accent-sem); }
+        .header-mes { color: var(--accent-mes); border-color: var(--accent-mes); } .badge-mes { background: var(--accent-mes); color: #555; }
 
-        input {
-            flex: 1;
-            border: none;
-            padding: 14px;
-            font-size: 16px;
-            border-radius: 12px;
-            outline: none;
-            background: transparent;
-        }
-
-        .hints {
-            font-size: 0.75rem;
-            color: #aaa;
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        /* --- FEED CONTAINER --- */
-        .feed-container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* --- SECCIONES (HOY, SEMANA, FUTURO) --- */
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #eee;
-        }
-
-        .section-header h2 {
-            font-size: 1.2rem;
-            margin: 0;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .badge {
-            font-size: 0.8rem;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 6px;
-            color: white;
-        }
-
-        .header-hoy { color: var(--accent-hoy); border-color: var(--accent-hoy); }
-        .badge-hoy { background: var(--accent-hoy); }
-
-        .header-sem { color: var(--accent-sem); border-color: var(--accent-sem); }
-        .badge-sem { background: var(--accent-sem); }
-
-        .header-mes { color: var(--accent-mes); border-color: var(--accent-mes); }
-        .badge-mes { background: var(--accent-mes); color: #555; }
-
-
-        /* --- TARJETAS --- */
         .card {
-            background: var(--card-bg);
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s;
-            border-left: 4px solid transparent;
+            background: var(--card-bg); padding: 15px; margin-bottom: 12px; border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;
+            transition: transform 0.2s; border-left: 4px solid transparent;
         }
-
         .card.type-hoy { border-left-color: var(--accent-hoy); }
         .card.type-sem { border-left-color: var(--accent-sem); }
         .card.type-mes { border-left-color: var(--accent-mes); }
 
-        /* Contenedor interno para texto + botón de link */
-        .card-content {
-            flex: 1;
-            padding-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            overflow: hidden; /* Evita desbordes */
-        }
-
-        .card-text {
-            font-size: 1rem;
-            line-height: 1.4;
-            word-break: break-word; /* Romper palabras largas si es necesario */
-        }
-
-        /* BOTÓN DE ENLACE INTELIGENTE */
+        .card-content { flex: 1; padding-right: 15px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; }
+        .card-text { font-size: 1rem; line-height: 1.4; word-break: break-word; }
+        
         .smart-link-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: #f0f2f5;
-            color: #007bff;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            margin-left: 10px;
-            text-decoration: none;
-            flex-shrink: 0; /* Que no se aplaste */
-            font-size: 1.2rem;
-        }
-        .smart-link-btn:active { background: #e1e4e8; }
-
-
-        /* --- BOTÓN DE SEGURIDAD (DOBLE TAP) --- */
-        .check-wrapper {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            min-width: 30px;
-            height: 30px;
+            display: inline-flex; align-items: center; justify-content: center; background: #f0f2f5; color: #007bff;
+            width: 32px; height: 32px; border-radius: 8px; margin-left: 10px; text-decoration: none; flex-shrink: 0; font-size: 1.2rem;
         }
 
+        .check-wrapper { display: flex; justify-content: flex-end; align-items: center; min-width: 30px; height: 30px; }
         .check-circle {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #e0e0e0;
-            border-radius: 50px;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto elástico */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background: white;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
+            width: 24px; height: 24px; border: 2px solid #e0e0e0; border-radius: 50px; cursor: pointer; position: relative;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center;
+            overflow: hidden; background: white; color: white; font-size: 0.75rem; font-weight: bold;
         }
+        .check-circle.confirm-state { width: 80px; border-color: var(--danger); background-color: var(--danger); }
+        .check-circle::after { content: "¿Borrar?"; opacity: 0; white-space: nowrap; transition: opacity 0.2s; }
+        .check-circle.confirm-state::after { opacity: 1; }
 
-        /* Estado ALERTA (Rojo) */
-        .check-circle.confirm-state {
-            width: 80px; /* Se estira */
-            border-color: var(--danger);
-            background-color: var(--danger);
-        }
-
-        .check-circle::after {
-            content: "¿Borrar?";
-            opacity: 0;
-            white-space: nowrap;
-            transition: opacity 0.2s;
-        }
-
-        .check-circle.confirm-state::after {
-            opacity: 1;
-        }
-
-        /* ANIMACIONES */
-        .completed {
-            opacity: 0;
-            transform: translateX(50px);
-            transition: all 0.4s ease;
-            pointer-events: none;
-        }
-
-        .empty-msg {
-            text-align: center;
-            color: #b2bec3;
-            font-style: italic;
-            font-size: 0.9rem;
-            margin-top: 10px;
-        }
+        .completed { opacity: 0; transform: translateX(50px); transition: all 0.4s ease; pointer-events: none; }
+        .empty-msg { text-align: center; color: #b2bec3; font-style: italic; font-size: 0.9rem; margin-top: 10px; }
     </style>
 </head>
 <body>
+
+    <div id="splash-screen">
+        <img src="icon.png" alt="Logo" class="splash-logo">
+        <p class="status-text">Cargando...</p>
+    </div>
 
     <div class="header-sticky">
         <div class="input-box">
@@ -246,112 +133,84 @@
     </div>
 
     <div class="feed-container">
-        <div class="section-header header-hoy">
-            <h2>🔥 Para Hoy</h2>
-            <span id="count-hoy" class="badge badge-hoy">0</span>
-        </div>
+        <div class="section-header header-hoy"><h2>🔥 Para Hoy</h2> <span id="count-hoy" class="badge badge-hoy">0</span></div>
         <div id="list-hoy"></div>
 
-        <div class="section-header header-sem">
-            <h2>📅 Semana</h2>
-            <span id="count-sem" class="badge badge-sem">0</span>
-        </div>
+        <div class="section-header header-sem"><h2>📅 Semana</h2> <span id="count-sem" class="badge badge-sem">0</span></div>
         <div id="list-sem"></div>
 
-        <div class="section-header header-mes">
-            <h2>🚀 Futuro</h2>
-            <span id="count-mes" class="badge badge-mes">0</span>
-        </div>
+        <div class="section-header header-mes"><h2>🚀 Futuro</h2> <span id="count-mes" class="badge badge-mes">0</span></div>
         <div id="list-mes"></div>
     </div>
 
     <script>
-        // --- TU URL DE GOOGLE APPS SCRIPT ---
+        // --- PEGA TU URL DE APPS SCRIPT AQUÍ ---
         const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec";
 
         let tasks = [];
 
-        // 1. CARGA INICIAL
         window.onload = () => {
-            // Cargar de caché local (instantáneo)
-            const localData = localStorage.getItem('feedTasks_v5'); // V5 para limpiar cachés viejos
+            const localData = localStorage.getItem('feedTasks_v5');
             if (localData) {
                 tasks = JSON.parse(localData);
-                renderFeed();
+                renderFeed(); 
             }
-            // Sincronizar con la nube
-            fetch(API_URL).then(res => res.json()).then(cloudData => {
-                tasks = cloudData;
-                saveLocal();
-                renderFeed();
-            }).catch(e => console.log("Offline", e));
+
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(cloudData => {
+                    tasks = cloudData;
+                    saveLocal();
+                    renderFeed();
+                    hideSplash();
+                })
+                .catch(e => {
+                    console.log("Offline", e);
+                    hideSplash(); 
+                });
         };
 
-        // 2. PARSEADOR INTELIGENTE
+        function hideSplash() {
+            const splash = document.getElementById('splash-screen');
+            splash.classList.add('hidden');
+            setTimeout(() => { splash.style.display = 'none'; }, 500);
+        }
+
         function parseInput(text) {
-            let tag = 'mes'; 
-            const t = text.toLowerCase().trim();
-            
-            // Detectar palabras clave al final
+            let tag = 'mes'; const t = text.toLowerCase().trim();
             if (/(hoy|dia)(\)?)$/i.test(t)) tag = 'hoy';
             else if (/(semana|sem)(\)?)$/i.test(t)) tag = 'sem';
             else if (/(mes)(\)?)$/i.test(t)) tag = 'mes';
-
-            // Limpieza visual: Quita cualquier rastro de .hoy #hoy (hoy) del final
             let clean = text.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim();
-            
             return { text: clean, tag: tag };
         }
 
-        // 3. DETECTOR DE LINKS
         function detectLinks(text) {
-            // Regex para detectar http, https o www
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
             const match = text.match(urlRegex);
-            
             if (match && match[0]) {
                 let url = match[0];
                 if (!url.startsWith('http')) url = 'https://' + url;
-                // Devolver icono de enlace
                 return `<a href="${url}" target="_blank" class="smart-link-btn">🔗</a>`;
             }
             return '';
         }
 
-        // 4. AÑADIR TAREA
         function addTask() {
             const input = document.getElementById('taskInput');
             const raw = input.value.trim();
             if (!raw) return;
-
             const { text, tag } = parseInput(raw);
             const newTask = { id: Date.now(), text: text, tag: tag };
-
-            tasks.push(newTask);
-            saveLocal();
-            renderFeed();
-            input.value = "";
-
-            // Enviar a Google (Guardamos el tag al final por seguridad)
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "add", id: newTask.id, text: text + " #" + tag })
-            });
+            tasks.push(newTask); saveLocal(); renderFeed(); input.value = "";
+            fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "add", id: newTask.id, text: text + " #" + tag }) });
         }
 
-        // 5. SEGURIDAD: DOBLE TAP PARA BORRAR
         function tryComplete(id, btn) {
-            // Si ya está rojo (confirmación) -> BORRAR
-            if (btn.classList.contains('confirm-state')) {
-                executeDelete(id, btn);
-            } else {
-                // Si está gris -> PONER ROJO
+            if (btn.classList.contains('confirm-state')) { executeDelete(id, btn); } 
+            else {
                 btn.classList.add('confirm-state');
-                
-                // Si en 3 segundos no toca de nuevo, volver a gris
-                setTimeout(() => {
-                    if (btn) btn.classList.remove('confirm-state');
-                }, 3000);
+                setTimeout(() => { if (btn) btn.classList.remove('confirm-state'); }, 3000);
             }
         }
 
@@ -359,39 +218,24 @@
             const card = btn.closest('.card');
             card.classList.add('completed');
             setTimeout(() => {
-                tasks = tasks.filter(t => t.id !== id);
-                saveLocal();
-                renderFeed();
+                tasks = tasks.filter(t => t.id !== id); saveLocal(); renderFeed();
                 fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "complete", id: id }) });
             }, 400);
         }
 
-        // 6. RENDERIZADO
         function renderFeed() {
             const listHoy = document.getElementById('list-hoy');
             const listSem = document.getElementById('list-sem');
             const listMes = document.getElementById('list-mes');
-
             listHoy.innerHTML = listSem.innerHTML = listMes.innerHTML = "";
             let counts = { hoy: 0, sem: 0, mes: 0 };
 
             tasks.forEach(task => {
-                let currentTag = task.tag;
-                let displayText = task.text;
-
-                // Soporte para datos antiguos (sin propiedad tag separada)
-                if (!currentTag) {
-                    const parsed = parseInput(displayText);
-                    currentTag = parsed.tag;
-                    displayText = parsed.text;
-                } else {
-                    // Limpieza visual extra por seguridad
-                    displayText = displayText.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim();
-                }
+                let currentTag = task.tag; let displayText = task.text;
+                if (!currentTag) { const parsed = parseInput(displayText); currentTag = parsed.tag; displayText = parsed.text; } 
+                else { displayText = displayText.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim(); }
 
                 counts[currentTag]++;
-
-                // Generar botón de enlace si hay URL
                 const linkBtn = detectLinks(displayText);
 
                 const card = document.createElement('div');
@@ -414,16 +258,11 @@
             document.getElementById('count-hoy').innerText = counts.hoy;
             document.getElementById('count-sem').innerText = counts.sem;
             document.getElementById('count-mes').innerText = counts.mes;
-            
             if(counts.hoy === 0) listHoy.innerHTML = '<div class="empty-msg">¡Todo limpio!</div>';
         }
 
         function saveLocal() { localStorage.setItem('feedTasks_v5', JSON.stringify(tasks)); }
-
-        // Enter para guardar
-        document.getElementById("taskInput").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") addTask();
-        });
+        document.getElementById("taskInput").addEventListener("keypress", function(e) { if (e.key === "Enter") addTask(); });
     </script>
 </body>
 </html>
