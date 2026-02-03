@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
+    <link rel="preload" href="icon.png" as="image">
+    
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -45,7 +47,9 @@
 
         .splash-logo {
             width: 120px; height: 120px; border-radius: 25px;
+            /* Sombra suave */
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            /* Animación suave */
             animation: breathe 3s infinite ease-in-out;
         }
 
@@ -146,7 +150,7 @@
     </div>
 
     <script>
-        // --- TU URL DE APPS SCRIPT ---
+        // --- TU URL DE GOOGLE APPS SCRIPT ---
         const API_URL = "https://script.google.com/macros/s/AKfycbwoqYepHvwFX5P7PkoVliMq6sqH9VJlmIB9-HgREsg-2FVlAweB-p-TQLOkzjBBkHou/exec";
 
         let tasks = [];
