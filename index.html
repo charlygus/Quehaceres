@@ -3,26 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Feed Seguro</title>
+    <meta name="theme-color" content="#ffffff"> <meta name="apple-mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="./manifest.json"> <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png"> <title>Mi Feed Seguro</title>
     <style>
         /* --- ESTILOS GENERALES --- */
         :root {
-            --bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-main: #2d3436;
-            --text-muted: #636e72;
-            --accent-hoy: #ff7675; 
-            --accent-sem: #74b9ff; 
-            --accent-mes: #fdcb6e; 
-            --danger: #ff4757; /* Color para borrar */
+            --bg: #f8f9fa; --card-bg: #ffffff; --text-main: #2d3436; --text-muted: #636e72;
+            --accent-hoy: #ff7675; --accent-sem: #74b9ff; --accent-mes: #fdcb6e; 
+            --danger: #ff4757;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding-bottom: 50px;
+            background: var(--bg); color: var(--text-main); margin: 0; padding-bottom: 50px;
+            /* Evita el rebote elástico en iOS al hacer scroll al final */
+            overscroll-behavior-y: none;
         }
 
         /* --- INPUT STICKY --- */
@@ -30,6 +24,8 @@
             position: sticky; top: 0; background: rgba(248, 249, 250, 0.95);
             backdrop-filter: blur(5px); padding: 15px 20px; z-index: 100;
             box-shadow: 0 4px 20px rgba(0,0,0,0.03); border-bottom: 1px solid rgba(0,0,0,0.05);
+            /* Ajuste para notch de iPhone en modo PWA */
+            padding-top: env(safe-area-inset-top, 15px);
         }
         .input-box {
             background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -41,10 +37,7 @@
 
         /* --- FEED --- */
         .feed-container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .section-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #eee;
-        }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #eee; }
         .section-header h2 { font-size: 1.2rem; margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .badge { font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 6px; color: white; }
         
@@ -63,51 +56,33 @@
         .card.type-sem { border-left-color: var(--accent-sem); }
         .card.type-mes { border-left-color: var(--accent-mes); }
         
-        .card-text { font-size: 1rem; line-height: 1.4; flex: 1; padding-right: 15px; word-break: break-word; }
-
-        /* --- BOTÓN DE SEGURIDAD (LA MAGIA) --- */
-        .check-wrapper {
-            /* Contenedor para el botón */
-            display: flex; justify-content: flex-end; align-items: center;
-            min-width: 30px; /* Espacio mínimo */
-            height: 30px;
+        /* Contenedor del texto y posibles acciones */
+        .card-content { flex: 1; padding-right: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .card-text { font-size: 1rem; line-height: 1.4; word-break: break-word; }
+        
+        /* NUEVO: Estilos para enlaces inteligentes */
+        .smart-link-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: #f0f2f5; color: #007bff;
+            width: 32px; height: 32px; border-radius: 8px;
+            margin-left: 10px; text-decoration: none; flex-shrink: 0;
         }
 
+        /* --- BOTÓN DE SEGURIDAD --- */
+        .check-wrapper { display: flex; justify-content: flex-end; align-items: center; min-width: 30px; height: 30px; }
         .check-circle {
             width: 24px; height: 24px; 
-            border: 2px solid #e0e0e0; border-radius: 50px; /* Redondo al inicio */
-            cursor: pointer; position: relative;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Animación elástica */
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
-            background: white;
-            color: white; /* Texto oculto al inicio */
-            font-size: 0.75rem; font-weight: bold;
+            border: 2px solid #e0e0e0; border-radius: 50px; cursor: pointer; position: relative;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            background: white; color: white; font-size: 0.75rem; font-weight: bold;
         }
+        .check-circle.confirm-state { width: 80px; border-color: var(--danger); background-color: var(--danger); }
+        .check-circle::after { content: "¿Borrar?"; opacity: 0; white-space: nowrap; transition: opacity 0.2s; }
+        .check-circle.confirm-state::after { opacity: 1; }
 
-        /* ESTADO: CONFIRMACIÓN (Al primer toque) */
-        .check-circle.confirm-state {
-            width: 80px; /* Se estira */
-            border-color: var(--danger);
-            background-color: var(--danger);
-        }
-
-        /* Texto dentro del botón */
-        .check-circle::after {
-            content: "¿Borrar?"; 
-            opacity: 0; 
-            white-space: nowrap;
-            transition: opacity 0.2s;
-        }
-
-        .check-circle.confirm-state::after {
-            opacity: 1; /* Aparece el texto */
-        }
-
-        /* ESTADO: ANIMACIÓN DE SALIDA */
         .completed { opacity: 0; transform: translateX(50px); transition: all 0.4s ease; pointer-events: none; }
         .empty-msg { text-align: center; color: #b2bec3; font-style: italic; font-size: 0.9rem; margin-top: 10px; }
-
     </style>
 </head>
 <body>
@@ -120,19 +95,13 @@
     </div>
 
     <div class="feed-container">
-        <div class="section-header header-hoy">
-            <h2>🔥 Para Hoy</h2> <span id="count-hoy" class="badge badge-hoy">0</span>
-        </div>
+        <div class="section-header header-hoy"><h2>🔥 Para Hoy</h2> <span id="count-hoy" class="badge badge-hoy">0</span></div>
         <div id="list-hoy"></div>
 
-        <div class="section-header header-sem">
-            <h2>📅 Semana</h2> <span id="count-sem" class="badge badge-sem">0</span>
-        </div>
+        <div class="section-header header-sem"><h2>📅 Semana</h2> <span id="count-sem" class="badge badge-sem">0</span></div>
         <div id="list-sem"></div>
 
-        <div class="section-header header-mes">
-            <h2>🚀 Futuro</h2> <span id="count-mes" class="badge badge-mes">0</span>
-        </div>
+        <div class="section-header header-mes"><h2>🚀 Futuro</h2> <span id="count-mes" class="badge badge-mes">0</span></div>
         <div id="list-mes"></div>
     </div>
 
@@ -143,27 +112,19 @@
         let tasks = [];
 
         window.onload = () => {
-            const localData = localStorage.getItem('feedTasks_v4'); // Nueva versión de caché
-            if (localData) {
-                tasks = JSON.parse(localData);
-                renderFeed();
-            }
+            const localData = localStorage.getItem('feedTasks_v4');
+            if (localData) { tasks = JSON.parse(localData); renderFeed(); }
             fetch(API_URL).then(res => res.json()).then(cloudData => {
-                tasks = cloudData;
-                saveLocal();
-                renderFeed();
+                tasks = cloudData; saveLocal(); renderFeed();
             }).catch(e => console.log("Offline", e));
         };
 
         function parseInput(text) {
             let tag = 'mes'; 
             const t = text.toLowerCase().trim();
-            
             if (/(hoy|dia)(\)?)$/i.test(t)) tag = 'hoy';
             else if (/(semana|sem)(\)?)$/i.test(t)) tag = 'sem';
             else if (/(mes)(\)?)$/i.test(t)) tag = 'mes';
-
-            // Limpieza visual
             let clean = text.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim();
             return { text: clean, tag: tag };
         }
@@ -172,37 +133,17 @@
             const input = document.getElementById('taskInput');
             const raw = input.value.trim();
             if (!raw) return;
-
             const { text, tag } = parseInput(raw);
             const newTask = { id: Date.now(), text: text, tag: tag };
-
-            tasks.push(newTask);
-            saveLocal();
-            renderFeed();
-            input.value = "";
-
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "add", id: newTask.id, text: text + " #" + tag })
-            });
+            tasks.push(newTask); saveLocal(); renderFeed(); input.value = "";
+            fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "add", id: newTask.id, text: text + " #" + tag }) });
         }
 
-        // --- LÓGICA DE SEGURIDAD DEL BOTÓN ---
         function tryComplete(id, btn) {
-            // 1. Si YA está en modo confirmación (rojo), BORRAMOS
-            if (btn.classList.contains('confirm-state')) {
-                executeDelete(id, btn);
-            } else {
-                // 2. Si NO está en modo confirmación, activamos el modo
+            if (btn.classList.contains('confirm-state')) { executeDelete(id, btn); } 
+            else {
                 btn.classList.add('confirm-state');
-                
-                // 3. Temporizador: Si en 3 segundos no le da, vuelve a gris
-                setTimeout(() => {
-                    // Verificamos si sigue existiendo el botón (por si lo borró rápido)
-                    if (btn) {
-                        btn.classList.remove('confirm-state');
-                    }
-                }, 3000); // 3 segundos para arrepentirse
+                setTimeout(() => { if (btn) btn.classList.remove('confirm-state'); }, 3000);
             }
         }
 
@@ -210,43 +151,52 @@
             const card = btn.closest('.card');
             card.classList.add('completed');
             setTimeout(() => {
-                tasks = tasks.filter(t => t.id !== id);
-                saveLocal();
-                renderFeed();
+                tasks = tasks.filter(t => t.id !== id); saveLocal(); renderFeed();
                 fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "complete", id: id }) });
             }, 400);
+        }
+
+        // --- NUEVA FUNCIÓN: DETECTAR ENLACES ---
+        function detectLinks(text) {
+            // Regex simple para detectar URLs (http, https o www)
+            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+            const match = text.match(urlRegex);
+            
+            if (match && match[0]) {
+                let url = match[0];
+                // Si empieza por www, le añadimos https:// para que funcione el enlace
+                if (!url.startsWith('http')) url = 'https://' + url;
+                // Devolvemos el botón HTML
+                return `<a href="${url}" target="_blank" class="smart-link-btn">🔗</a>`;
+            }
+            return ''; // Si no hay link, no devuelve nada
         }
 
         function renderFeed() {
             const listHoy = document.getElementById('list-hoy');
             const listSem = document.getElementById('list-sem');
             const listMes = document.getElementById('list-mes');
-
             listHoy.innerHTML = listSem.innerHTML = listMes.innerHTML = "";
             let counts = { hoy: 0, sem: 0, mes: 0 };
 
             tasks.forEach(task => {
-                let currentTag = task.tag;
-                let displayText = task.text;
-
-                if (!currentTag) {
-                    const parsed = parseInput(displayText);
-                    currentTag = parsed.tag;
-                    displayText = parsed.text;
-                } else {
-                    displayText = displayText.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim();
-                }
+                let currentTag = task.tag; let displayText = task.text;
+                if (!currentTag) { const parsed = parseInput(displayText); currentTag = parsed.tag; displayText = parsed.text; } 
+                else { displayText = displayText.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim(); }
 
                 counts[currentTag]++;
 
+                // Detectamos si hay enlace y generamos el botón
+                const linkBtn = detectLinks(displayText);
+
                 const card = document.createElement('div');
                 card.className = `card type-${currentTag}`;
-                
-                // AQUÍ ESTÁ EL CAMBIO EN EL HTML DEL BOTÓN
-                // Usamos un wrapper para que la animación no mueva el texto de la izquierda
-                // Y llamamos a tryComplete en lugar de completeTask directamente
+                // Estructura HTML modificada para incluir el linkBtn si existe
                 card.innerHTML = `
-                    <div class="card-text">${displayText}</div>
+                    <div class="card-content">
+                        <span class="card-text">${displayText}</span>
+                        ${linkBtn}
+                    </div>
                     <div class="check-wrapper">
                         <div class="check-circle" onclick="tryComplete(${task.id}, this)"></div>
                     </div>
@@ -260,15 +210,11 @@
             document.getElementById('count-hoy').innerText = counts.hoy;
             document.getElementById('count-sem').innerText = counts.sem;
             document.getElementById('count-mes').innerText = counts.mes;
-            
             if(counts.hoy === 0) listHoy.innerHTML = '<div class="empty-msg">¡Limpio!</div>';
         }
 
         function saveLocal() { localStorage.setItem('feedTasks_v4', JSON.stringify(tasks)); }
-
-        document.getElementById("taskInput").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") addTask();
-        });
+        document.getElementById("taskInput").addEventListener("keypress", function(e) { if (e.key === "Enter") addTask(); });
     </script>
 </body>
 </html>
