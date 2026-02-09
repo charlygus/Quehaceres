@@ -23,9 +23,13 @@
             --card-bg: #ffffff; 
             --text-main: #2d3436; 
             --text-muted: #636e72;
-            --accent-hoy: #ff7675; 
-            --accent-sem: #74b9ff; 
-            --accent-mes: #fdcb6e; 
+            
+            /* PALETA DE COLORES */
+            --accent-hoy: #ff7675;  /* Rojo */
+            --accent-sem: #74b9ff;  /* Azul */
+            --accent-casa: #a29bfe; /* NUEVO: Lavanda para Casa */
+            --accent-mes: #fdcb6e;  /* Amarillo */
+            
             --danger: #ff4757;
         }
 
@@ -35,7 +39,7 @@
             overscroll-behavior-y: none;
         }
 
-        /* --- SPLASH SCREEN (PANTALLA DE CARGA) --- */
+        /* --- SPLASH SCREEN --- */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #ffffff; z-index: 9999;
@@ -47,9 +51,7 @@
 
         .splash-logo {
             width: 120px; height: 120px; border-radius: 25px;
-            /* Sombra suave */
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            /* Animación suave */
             animation: breathe 3s infinite ease-in-out;
         }
 
@@ -64,7 +66,6 @@
             font-weight: 500; text-transform: uppercase;
             animation: fadeInOut 2s infinite;
         }
-        
         @keyframes fadeInOut { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
 
@@ -85,12 +86,15 @@
         .hints { font-size: 0.75rem; color: #aaa; margin-top: 8px; text-align: center; }
 
         .feed-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        
         .section-header { display: flex; align-items: center; justify-content: space-between; margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #eee; }
         .section-header h2 { font-size: 1.2rem; margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .badge { font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 6px; color: white; }
         
+        /* COLORES CABECERAS */
         .header-hoy { color: var(--accent-hoy); border-color: var(--accent-hoy); } .badge-hoy { background: var(--accent-hoy); }
         .header-sem { color: var(--accent-sem); border-color: var(--accent-sem); } .badge-sem { background: var(--accent-sem); }
+        .header-casa { color: var(--accent-casa); border-color: var(--accent-casa); } .badge-casa { background: var(--accent-casa); } /* NUEVO */
         .header-mes { color: var(--accent-mes); border-color: var(--accent-mes); } .badge-mes { background: var(--accent-mes); color: #555; }
 
         .card {
@@ -98,8 +102,11 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;
             transition: transform 0.2s; border-left: 4px solid transparent;
         }
+        
+        /* COLORES TARJETAS */
         .card.type-hoy { border-left-color: var(--accent-hoy); }
         .card.type-sem { border-left-color: var(--accent-sem); }
+        .card.type-casa { border-left-color: var(--accent-casa); } /* NUEVO */
         .card.type-mes { border-left-color: var(--accent-mes); }
 
         .card-content { flex: 1; padding-right: 15px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; }
@@ -128,13 +135,14 @@
 
     <div id="splash-screen">
         <img src="icon.png" alt="Logo" class="splash-logo">
-           </div>
+        <p class="status-text">Cargando...</p>
+    </div>
 
     <div class="header-sticky">
         <div class="input-box">
             <input type="text" id="taskInput" placeholder="Anotar tarea..." autocomplete="off">
         </div>
-        <div class="hints">Usa: .hoy, .semana o nada</div>
+        <div class="hints">Usa: .hoy, .semana, .casa o nada</div>
     </div>
 
     <div class="feed-container">
@@ -143,6 +151,9 @@
 
         <div class="section-header header-sem"><h2>📅 Semana</h2> <span id="count-sem" class="badge badge-sem">0</span></div>
         <div id="list-sem"></div>
+
+        <div class="section-header header-casa"><h2>🏠 Casa / Finde</h2> <span id="count-casa" class="badge badge-casa">0</span></div>
+        <div id="list-casa"></div>
 
         <div class="section-header header-mes"><h2>🚀 Futuro</h2> <span id="count-mes" class="badge badge-mes">0</span></div>
         <div id="list-mes"></div>
@@ -155,7 +166,7 @@
         let tasks = [];
 
         window.onload = () => {
-            const localData = localStorage.getItem('feedTasks_v5');
+            const localData = localStorage.getItem('feedTasks_v6'); // V6 para actualizar estructura
             if (localData) {
                 tasks = JSON.parse(localData);
                 renderFeed(); 
@@ -183,10 +194,16 @@
 
         function parseInput(text) {
             let tag = 'mes'; const t = text.toLowerCase().trim();
+            
+            // Lógica de detección actualizada con .casa
             if (/(hoy|dia)(\)?)$/i.test(t)) tag = 'hoy';
             else if (/(semana|sem)(\)?)$/i.test(t)) tag = 'sem';
+            else if (/(casa)(\)?)$/i.test(t)) tag = 'casa'; // NUEVO DETECTOR
             else if (/(mes)(\)?)$/i.test(t)) tag = 'mes';
-            let clean = text.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim();
+            
+            // Limpieza visual: Quita .casa también
+            let clean = text.replace(/[\s\.\(#]+(hoy|dia|semana|sem|casa|mes)[\)]?$/i, "").trim();
+            
             return { text: clean, tag: tag };
         }
 
@@ -231,16 +248,28 @@
         function renderFeed() {
             const listHoy = document.getElementById('list-hoy');
             const listSem = document.getElementById('list-sem');
+            const listCasa = document.getElementById('list-casa'); // NUEVO
             const listMes = document.getElementById('list-mes');
-            listHoy.innerHTML = listSem.innerHTML = listMes.innerHTML = "";
-            let counts = { hoy: 0, sem: 0, mes: 0 };
+            
+            listHoy.innerHTML = listSem.innerHTML = listCasa.innerHTML = listMes.innerHTML = "";
+            let counts = { hoy: 0, sem: 0, casa: 0, mes: 0 }; // NUEVO CONTADOR
 
             tasks.forEach(task => {
                 let currentTag = task.tag; let displayText = task.text;
-                if (!currentTag) { const parsed = parseInput(displayText); currentTag = parsed.tag; displayText = parsed.text; } 
-                else { displayText = displayText.replace(/[\s\.\(#]+(hoy|dia|semana|sem|mes)[\)]?$/i, "").trim(); }
+                
+                // Soporte retroactivo para tags
+                if (!currentTag) { 
+                    const parsed = parseInput(displayText); 
+                    currentTag = parsed.tag; 
+                    displayText = parsed.text; 
+                } else { 
+                    displayText = displayText.replace(/[\s\.\(#]+(hoy|dia|semana|sem|casa|mes)[\)]?$/i, "").trim(); 
+                }
 
+                // Fallback por si acaso
+                if (!counts.hasOwnProperty(currentTag)) counts[currentTag] = 0;
                 counts[currentTag]++;
+
                 const linkBtn = detectLinks(displayText);
 
                 const card = document.createElement('div');
@@ -257,16 +286,19 @@
 
                 if (currentTag === 'hoy') listHoy.prepend(card);
                 else if (currentTag === 'sem') listSem.prepend(card);
+                else if (currentTag === 'casa') listCasa.prepend(card); // NUEVO
                 else listMes.prepend(card);
             });
 
             document.getElementById('count-hoy').innerText = counts.hoy;
             document.getElementById('count-sem').innerText = counts.sem;
+            document.getElementById('count-casa').innerText = counts.casa; // NUEVO
             document.getElementById('count-mes').innerText = counts.mes;
-            if(counts.hoy === 0) listHoy.innerHTML = '<div class="empty-msg">¡Todo limpio!</div>';
+            
+            if(counts.hoy === 0 && counts.sem === 0 && counts.casa === 0) listHoy.innerHTML = '<div class="empty-msg">¡Todo limpio!</div>';
         }
 
-        function saveLocal() { localStorage.setItem('feedTasks_v5', JSON.stringify(tasks)); }
+        function saveLocal() { localStorage.setItem('feedTasks_v6', JSON.stringify(tasks)); }
         document.getElementById("taskInput").addEventListener("keypress", function(e) { if (e.key === "Enter") addTask(); });
     </script>
 </body>
